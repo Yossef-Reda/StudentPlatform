@@ -1,0 +1,144 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@{
+    var controller = (ViewContext.RouteData.Values["controller"]?.ToString() ?? "");
+    var action = (ViewContext.RouteData.Values["action"]?.ToString() ?? "");
+    bool IsActive(string c, string? a = null) =>
+        string.Equals(controller, c, StringComparison.OrdinalIgnoreCase) &&
+        (a == null || string.Equals(action, a, StringComparison.OrdinalIgnoreCase));
+    var userName = User?.Identity?.Name ?? "";
+    var initial = string.IsNullOrEmpty(userName) ? "؟" : userName.Trim()[0].ToString().ToUpper();
+}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-bs-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - منصة الطالب التعليمية</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="sp-navbar shadow-sm">
+        <nav class="navbar navbar-expand-lg py-2" aria-label="التنقل الرئيسي">
+            <div class="container">
+                <a class="sp-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="sp-brand-mark"><i class="bi bi-mortarboard-fill"></i></span>
+                    <span>منصّة الطالب</span>
+                </a>
+                <div class="d-flex align-items-center gap-2 order-lg-3">
+                    <button type="button" class="sp-icon-btn" data-theme-toggle aria-label="التبديل إلى الوضع الداكن" title="الوضع الداكن">
+                        <i class="bi bi-moon-stars-fill" data-theme-icon aria-hidden="true"></i>
+                    </button>
+                    <button class="navbar-toggler sp-icon-btn" type="button" data-bs-toggle="collapse" data-bs-target="#spNavbar"
+                            aria-controls="spNavbar" aria-expanded="false" aria-label="فتح قائمة التنقل">
+                        <i class="bi bi-list" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <div class="collapse navbar-collapse order-lg-2" id="spNavbar">
+                    <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-1">
+                        <li class="nav-item">
+                            <a class="nav-link sp-nav-link @(IsActive("Home", "Index") ? "active" : "")" aria-current="@(IsActive("Home", "Index") ? "page" : null)" asp-area="" asp-controller="Home" asp-action="Index">
+                                <i class="bi bi-house-door" aria-hidden="true"></i> الرئيسية
+                            </a>
+                        </li>
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            @if (User.IsInRole("Teacher"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link sp-nav-link @(IsActive("Teacher") ? "active" : "")" asp-controller="Teacher" asp-action="Dashboard">
+                                        <i class="bi bi-speedometer2" aria-hidden="true"></i> لوحة التحكم
+                                    </a>
+                                </li>
+                            }
+                            else if (User.IsInRole("Student"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link sp-nav-link @(IsActive("Student") ? "active" : "")" asp-controller="Student" asp-action="Index">
+                                        <i class="bi bi-collection-play" aria-hidden="true"></i> المحاضرات
+                                    </a>
+                                </li>
+                            }
+                        }
+                        <li class="nav-item">
+                            <a class="nav-link sp-nav-link @(IsActive("Home", "Privacy") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Privacy">
+                                <i class="bi bi-shield-check" aria-hidden="true"></i> الخصوصية
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav align-items-lg-center gap-2">
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link d-flex align-items-center gap-2 text-decoration-none" href="#" role="button"
+                                   data-bs-toggle="dropdown" aria-expanded="false" aria-label="قائمة المستخدم">
+                                    <span class="sp-avatar" aria-hidden="true">@initial</span>
+                                    <span class="d-flex flex-column lh-sm">
+                                        <strong class="small text-truncate" style="max-width: 160px;">@userName</strong>
+                                        <small class="sp-muted" style="font-size:.75rem;">@(User.IsInRole("Teacher") ? "معلّم" : "طالب")</small>
+                                    </span>
+                                    <i class="bi bi-chevron-down small sp-muted" aria-hidden="true"></i>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end text-end shadow">
+                                    <li><h6 class="dropdown-header">@userName</h6></li>
+                                    <li>
+                                        @if (User.IsInRole("Teacher"))
+                                        {
+                                            <a class="dropdown-item" asp-controller="Teacher" asp-action="Dashboard"><i class="bi bi-speedometer2 ms-1"></i> لوحة التحكم</a>
+                                        }
+                                        else if (User.IsInRole("Student"))
+                                        {
+                                            <a class="dropdown-item" asp-controller="Student" asp-action="Index"><i class="bi bi-collection-play ms-1"></i> محاضراتي</a>
+                                        }
+                                    </li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post" class="px-0">
+                                            <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-left ms-1" aria-hidden="true"></i> تسجيل الخروج</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item d-flex gap-2">
+                                <a class="btn btn-sp-outline btn-sm px-3" asp-controller="Account" asp-action="Login">دخول</a>
+                                <a class="btn btn-sp-primary btn-sm px-3" asp-controller="Account" asp-action="Register">حساب جديد</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container flex-grow-1 py-4">
+        <main role="main">
+            <partial name="_Toasts" />
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="sp-footer">
+        <div class="container d-flex flex-wrap gap-2 align-items-center justify-content-between">
+            <span class="d-inline-flex align-items-center gap-2">
+                <span class="sp-brand-mark" style="width:28px;height:28px;font-size:.9rem;border-radius:8px;"><i class="bi bi-mortarboard-fill"></i></span>
+                &copy; 2026 - منصّة الطالب التعليمية
+            </span>
+            <a class="text-decoration-none sp-muted" asp-area="" asp-controller="Home" asp-action="Privacy">سياسة الخصوصية</a>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

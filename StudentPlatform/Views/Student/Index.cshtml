@@ -1,0 +1,145 @@
+﻿@model IEnumerable<StudentPlatform.Models.Lecture>
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<IdentityUser> UserManager
+
+@{
+    ViewData["Title"] = "المحاضرات والواجبات الدراسية";
+    ViewData["PageTitle"] = "المحاضرات والواجبات الدراسية";
+    ViewData["PageSubtitle"] = "تابع محاضراتك، شاهد الفيديوهات، سلّم واجباتك وتابع درجاتك أولاً بأول.";
+    ViewData["PageIcon"] = "bi-collection-play-fill";
+    var currentUserId = UserManager.GetUserId(User);
+    var now = DateTime.Now;
+    var lectures = Model?.ToList() ?? new List<StudentPlatform.Models.Lecture>();
+    var allAssignments = lectures.SelectMany(l => l.Assignments ?? Enumerable.Empty<StudentPlatform.Models.Assignment>()).ToList();
+    int totalLectures = lectures.Count;
+    int totalAssignments = allAssignments.Count;
+    int submittedCount = allAssignments.Count(a => a.Submissions != null && a.Submissions.Any(s => s.StudentId == currentUserId));
+    int overdueCount = allAssignments.Count(a =>
+    {
+        var sub = a.Submissions?.FirstOrDefault(s => s.StudentId == currentUserId);
+        return sub == null && a.Deadline < now;
+    });
+    int pendingCount = totalAssignments - submittedCount - overdueCount;
+    if (pendingCount < 0) { pendingCount = 0; }
+    int lectureIndex = 0;
+}
+
+<partial name="_PageHeader" />
+
+<!-- Summary stats -->
+<div class="row g-3 mb-4" role="region" aria-label="ملخص الإنجاز">
+    <div class="col-6 col-lg">
+        <div class="sp-stat">
+            <span class="sp-stat-icon is-indigo"><i class="bi bi-collection-play-fill" aria-hidden="true"></i></span>
+            <span><span class="sp-stat-value sp-num">@totalLectures</span><br /><span class="sp-stat-label">محاضرة</span></span>
+        </div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="sp-stat">
+            <span class="sp-stat-icon is-sky"><i class="bi bi-journal-text" aria-hidden="true"></i></span>
+            <span><span class="sp-stat-value sp-num">@totalAssignments</span><br /><span class="sp-stat-label">واجب</span></span>
+        </div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="sp-stat">
+            <span class="sp-stat-icon is-green"><i class="bi bi-check-circle-fill" aria-hidden="true"></i></span>
+            <span><span class="sp-stat-value sp-num">@submittedCount</span><br /><span class="sp-stat-label">تم تسليمه</span></span>
+        </div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="sp-stat">
+            <span class="sp-stat-icon is-amber"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span>
+            <span><span class="sp-stat-value sp-num">@pendingCount</span><br /><span class="sp-stat-label">بانتظار التسليم</span></span>
+        </div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="sp-stat">
+            <span class="sp-stat-icon is-red"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i></span>
+            <span><span class="sp-stat-value sp-num">@overdueCount</span><br /><span class="sp-stat-label">انتهى موعده</span></span>
+        </div>
+    </div>
+</div>
+
+@if (!lectures.Any())
+{
+    <partial name="_EmptyState" view-data='new ViewDataDictionary(ViewData) { { "EmptyTitle", "لا توجد محاضرات بعد" }, { "EmptyMessage", "لم يقم المعلّم بإضافة أي محاضرة حتى الآن. عُد لاحقاً." }, { "EmptyIcon", "bi-collection-play" } }' />
+}
+else
+{
+    <!-- Filter tabs -->
+    <div class="sp-filters mb-4" role="tablist" aria-label="تصفية الواجبات">
+        <button type="button" class="sp-filter-btn active" data-filter-btn="all" aria-selected="true"><i class="bi bi-grid" aria-hidden="true"></i> الكل <span class="count sp-num">@totalAssignments</span></button>
+        <button type="button" class="sp-filter-btn" data-filter-btn="pending" aria-selected="false"><i class="bi bi-hourglass-split" aria-hidden="true"></i> بانتظار التسليم <span class="count sp-num">@pendingCount</span></button>
+        <button type="button" class="sp-filter-btn" data-filter-btn="submitted" aria-selected="false"><i class="bi bi-check-circle" aria-hidden="true"></i> تم تسليمها <span class="count sp-num">@submittedCount</span></button>
+        <button type="button" class="sp-filter-btn" data-filter-btn="overdue" aria-selected="false"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> انتهى موعدها <span class="count sp-num">@overdueCount</span></button>
+    </div>
+
+    <div id="spNoResult" class="mb-4" style="display:none;">
+        <partial name="_EmptyState" view-data='new ViewDataDictionary(ViewData) { { "EmptyTitle", "لا توجد نتائج مطابقة" }, { "EmptyMessage", "جرّب اختيار تصنيف آخر لعرض الواجبات." }, { "EmptyIcon", "bi-search" } }' />
+    </div>
+
+    @foreach (var lecture in lectures)
+    {
+        lectureIndex++;
+        var accId = "lectureAcc" + lectureIndex;
+        var assignCount = lecture.Assignments?.Count ?? 0;
+        <section class="sp-card sp-lecture-card hover-lift mb-4" data-lecture-card aria-labelledby="lec-title-@lectureIndex">
+            <div class="sp-lecture-head d-flex align-items-start gap-3">
+                <span class="sp-lecture-num sp-num" aria-hidden="true">@lectureIndex</span>
+                <div class="flex-grow-1">
+                    <h2 class="sp-lecture-title" id="lec-title-@lectureIndex">@lecture.Title</h2>
+                    @if (!string.IsNullOrWhiteSpace(lecture.Description))
+                    {
+                        <p class="sp-lecture-desc">@lecture.Description</p>
+                    }
+                    <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+                        @if (!string.IsNullOrEmpty(lecture.VideoUrl))
+                        {
+                            <a href="@lecture.VideoUrl" target="_blank" rel="noopener" class="btn btn-sp-primary btn-sm px-3">
+                                <i class="bi bi-play-circle-fill ms-1" aria-hidden="true"></i> مشاهدة الفيديو
+                            </a>
+                        }
+                        @if (!string.IsNullOrEmpty(lecture.FilePath))
+                        {
+                            <a href="@lecture.FilePath" target="_blank" rel="noopener" class="btn btn-sp-outline btn-sm px-3">
+                                <i class="bi bi-file-earmark-arrow-down ms-1" aria-hidden="true"></i> تحميل ملف المحاضرة
+                            </a>
+                        }
+                        <span class="sp-badge sp-badge-gray"><i class="bi bi-journal-text" aria-hidden="true"></i> <span class="sp-num">@assignCount</span> واجبات</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-3 p-md-4">
+                <h3 class="h6 fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-list-task text-primary" aria-hidden="true"></i> الواجبات المطلوبة
+                </h3>
+                @if (lecture.Assignments != null && lecture.Assignments.Any())
+                {
+                    <div class="accordion d-flex flex-column gap-3" id="@accId">
+                        @{
+                            int aIdx = 0;
+                        }
+                        @foreach (var assignment in lecture.Assignments)
+                        {
+                            aIdx++;
+                            await Html.RenderPartialAsync("_AssignmentCard", assignment, new ViewDataDictionary(ViewData)
+                            {
+                                { "CurrentUserId", currentUserId },
+                                { "LectureIndex", lectureIndex },
+                                { "AssignmentIndex", aIdx },
+                                { "Now", now },
+                                { "CollapseParent", accId }
+                            });
+                        }
+                        <p class="small sp-muted mb-0 d-none" data-filter-empty><i class="bi bi-info-circle ms-1"></i> لا توجد واجبات ضمن هذا التصنيف في هذه المحاضرة.</p>
+                    </div>
+                }
+                else
+                {
+                    <p class="sp-muted small mb-0" data-empty-assignments><i class="bi bi-info-circle ms-1"></i> لا توجد واجبات لهذه المحاضرة حتى الآن.</p>
+                }
+            </div>
+        </section>
+    }
+}

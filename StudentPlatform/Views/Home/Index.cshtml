@@ -1,0 +1,57 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@{
+    ViewData["Title"] = "الرئيسية";
+}
+
+<div class="sp-card p-4 p-md-5 text-center position-relative overflow-hidden mb-4">
+    <div class="position-absolute top-0 start-0 w-100" style="height:6px;background:linear-gradient(to left,#4F46E5,#7C3AED,#06B6D4);" aria-hidden="true"></div>
+    <span class="sp-auth-logo mb-3"><i class="bi bi-mortarboard-fill" aria-hidden="true"></i></span>
+    <h1 class="fw-bolder mb-2" style="font-size:2rem;">منصّة الطالب التعليمية</h1>
+    <p class="sp-muted mx-auto mb-4" style="max-width:560px;line-height:2;">
+        مكان واحد لمحاضراتك وواجباتك ودرجاتك: شاهد الفيديوهات، حمّل ملفات الواجبات،
+        ارفع حلولك، وتابع ملاحظات المعلّم أولاً بأول.
+    </p>
+    <div class="d-flex flex-wrap justify-content-center gap-2">
+        @if (SignInManager.IsSignedIn(User))
+        {
+            @if (User.IsInRole("Teacher"))
+            {
+                <a class="btn btn-sp-primary px-4" asp-controller="Teacher" asp-action="Dashboard"><i class="bi bi-speedometer2 ms-1"></i> الذهاب للوحة التحكم</a>
+            }
+            else
+            {
+                <a class="btn btn-sp-primary px-4" asp-controller="Student" asp-action="Index"><i class="bi bi-collection-play ms-1"></i> الذهاب للمحاضرات</a>
+            }
+        }
+        else
+        {
+            <a class="btn btn-sp-primary px-4" asp-controller="Account" asp-action="Login"><i class="bi bi-box-arrow-in-left ms-1"></i> تسجيل الدخول</a>
+            <a class="btn btn-sp-outline px-4" asp-controller="Account" asp-action="Register"><i class="bi bi-person-plus ms-1"></i> إنشاء حساب طالب</a>
+        }
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="sp-card hover-lift p-4 h-100 text-center">
+            <span class="sp-stat-icon is-indigo mx-auto mb-3"><i class="bi bi-play-circle-fill"></i></span>
+            <h2 class="h6 fw-bold">محاضرات بالفيديو</h2>
+            <p class="sp-muted small mb-0" style="line-height:1.9;">شاهد شرح كل محاضرة وحمّل ملفاتها المرفقة بضغطة واحدة.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="sp-card hover-lift p-4 h-100 text-center">
+            <span class="sp-stat-icon is-sky mx-auto mb-3"><i class="bi bi-cloud-arrow-up-fill"></i></span>
+            <h2 class="h6 fw-bold">تسليم سهل للواجبات</h2>
+            <p class="sp-muted small mb-0" style="line-height:1.9;">ارفع حلك مع اسمك الثلاثي وتابع حالة التسليم والمواعيد النهائية.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="sp-card hover-lift p-4 h-100 text-center">
+            <span class="sp-stat-icon is-green mx-auto mb-3"><i class="bi bi-award-fill"></i></span>
+            <h2 class="h6 fw-bold">درجات وملاحظات فورية</h2>
+            <p class="sp-muted small mb-0" style="line-height:1.9;">تظهر درجتك وملاحظات المعلّم داخل بطاقة الواجب مباشرة.</p>
+        </div>
+    </div>
+</div>

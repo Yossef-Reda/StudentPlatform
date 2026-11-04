@@ -1,0 +1,30 @@
+@* Toasts from TempData: TempData["Success"] / TempData["Error"] (+ ModelState-independent). Also supports ViewData passthrough. *@
+@{
+    var success = TempData["Success"]?.ToString();
+    var error = TempData["Error"]?.ToString() ?? TempData["ErrorMessage"]?.ToString();
+}
+@if (!string.IsNullOrWhiteSpace(success) || !string.IsNullOrWhiteSpace(error))
+{
+    <div class="toast-container position-fixed bottom-0 start-0 p-3" aria-live="polite" aria-atomic="true">
+        @if (!string.IsNullOrWhiteSpace(success))
+        {
+            <div class="toast sp-toast align-items-center border-success" role="status" aria-live="polite">
+                <div class="d-flex align-items-center gap-2 p-2">
+                    <span class="sp-stat-icon is-green" style="width:36px;height:36px;font-size:1rem;"><i class="bi bi-check-circle-fill"></i></span>
+                    <div class="toast-body fw-semibold">@success</div>
+                    <button type="button" class="btn-close me-auto ms-2" data-bs-dismiss="toast" aria-label="إغلاق التنبيه"></button>
+                </div>
+            </div>
+        }
+        @if (!string.IsNullOrWhiteSpace(error))
+        {
+            <div class="toast sp-toast align-items-center border-danger" role="alert" aria-live="assertive">
+                <div class="d-flex align-items-center gap-2 p-2">
+                    <span class="sp-stat-icon is-red" style="width:36px;height:36px;font-size:1rem;"><i class="bi bi-exclamation-triangle-fill"></i></span>
+                    <div class="toast-body fw-semibold">@error</div>
+                    <button type="button" class="btn-close me-auto ms-2" data-bs-dismiss="toast" aria-label="إغلاق التنبيه"></button>
+                </div>
+            </div>
+        }
+    </div>
+}

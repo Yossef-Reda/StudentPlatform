@@ -1,0 +1,9 @@
+@* Status badge. @model string: "submitted" | "pending" | "overdue" *@
+@model string
+@{
+    var s = (Model ?? "pending").ToLowerInvariant();
+    string cls = "sp-badge-amber", icon = "bi-hourglass-split", text = "لم يتم التسليم";
+    if (s == "submitted") { cls = "sp-badge-green"; icon = "bi-check-circle-fill"; text = "تم التسليم"; }
+    else if (s == "overdue") { cls = "sp-badge-red"; icon = "bi-exclamation-triangle-fill"; text = "انتهى الموعد"; }
+}
+<span class="sp-badge @cls"><i class="bi @icon" aria-hidden="true"></i> @text</span>

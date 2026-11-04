@@ -1,0 +1,18 @@
+@* Reusable page header. Usage:
+   <partial name="_PageHeader" view-data='new ViewDataDictionary(ViewData) { { "PageTitle", "..." }, { "PageSubtitle", "..." }, { "PageIcon", "bi-..." } }' />
+   Optional: "PageActions" extracted via section? Keep simple: actions rendered by caller after partial. *@
+@{
+    var title = ViewData["PageTitle"]?.ToString() ?? ViewData["Title"]?.ToString() ?? "";
+    var subtitle = ViewData["PageSubtitle"]?.ToString() ?? "";
+    var icon = ViewData["PageIcon"]?.ToString() ?? "bi-grid-1x2";
+}
+<div class="sp-page-header d-flex flex-wrap align-items-start gap-3">
+    <span class="sp-lecture-num" aria-hidden="true"><i class="bi @icon"></i></span>
+    <div>
+        <h1 class="sp-page-title">@title</h1>
+        @if (!string.IsNullOrWhiteSpace(subtitle))
+        {
+            <p class="sp-page-subtitle">@subtitle</p>
+        }
+    </div>
+</div>

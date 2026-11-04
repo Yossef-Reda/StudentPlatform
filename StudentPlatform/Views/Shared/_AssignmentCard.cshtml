@@ -1,0 +1,115 @@
+@* Single assignment row for the student portal.
+   @model Assignment. Context via ViewData:
+   - "CurrentUserId" (string), "LectureIndex" (int), "AssignmentIndex" (int),
+   - "Now" (DateTime), "CollapseParent" (string accordion id) *@
+@model StudentPlatform.Models.Assignment
+@{
+    var currentUserId = ViewData["CurrentUserId"]?.ToString() ?? "";
+    var li = Convert.ToInt32(ViewData["LectureIndex"] ?? 0);
+    var ai = Convert.ToInt32(ViewData["AssignmentIndex"] ?? 0);
+    var nowObj = ViewData["Now"] as DateTime?;
+    var now = nowObj ?? DateTime.Now;
+    var parent = ViewData["CollapseParent"]?.ToString() ?? "";
+    var userSubmission = Model.Submissions?.FirstOrDefault(s => s.StudentId == currentUserId);
+    var isSubmitted = userSubmission != null;
+    var isOverdue = !isSubmitted && Model.Deadline < now;
+    var status = isSubmitted ? "submitted" : (isOverdue ? "overdue" : "pending");
+    var collapseId = $"col-{li}-{ai}";
+    var headingId = $"head-{li}-{ai}";
+    var deadlineIso = Model.Deadline.ToString("yyyy-MM-ddTHH:mm:ss");
+}
+<div class="sp-assignment" data-status="@status">
+    <button class="accordion-button collapsed d-flex align-items-center gap-2 p-3 bg-transparent border-0 w-100 text-end"
+            type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId"
+            aria-expanded="false" aria-controls="@collapseId" id="@headingId">
+        <span class="fw-bold flex-grow-1">@Model.Title</span>
+        <partial name="_StatusBadge" model="@status" />
+    </button>
+    <div id="@collapseId" class="accordion-collapse collapse" aria-labelledby="@headingId" data-bs-parent="#@parent">
+        <div class="p-3 pt-0 border-top sp-div mt-1">
+            <div class="pt-3">
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    <p class="sp-muted mb-2" style="line-height:1.9;">@Model.Description</p>
+                }
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    <span class="sp-deadline @(isOverdue ? "overdue" : "")">
+                        <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                        آخر موعد للتسليم: <time datetime="@deadlineIso">@Model.Deadline.ToString("yyyy/MM/dd - HH:mm")</time>
+                    </span>
+                    @if (!isSubmitted)
+                    {
+                        <span class="sp-countdown" data-deadline="@deadlineIso" aria-live="polite"></span>
+                    }
+                </div>
+                @if (!string.IsNullOrEmpty(Model.FilePath))
+                {
+                    <div class="mb-3">
+                        <a href="@Model.FilePath" target="_blank" rel="noopener" class="btn btn-sp-outline btn-sm">
+                            <i class="bi bi-download ms-1" aria-hidden="true"></i> تحميل ملف الواجب
+                        </a>
+                    </div>
+                }
+
+                @if (userSubmission != null)
+                {
+                    <div class="sp-submitted-panel p-3">
+                        <div class="d-flex align-items-center gap-2 mb-2 text-success fw-bold">
+                            <i class="bi bi-check-circle-fill" aria-hidden="true"></i> تم تسليم الحل بنجاح
+                        </div>
+                        <p class="mb-1 small">تاريخ التسليم: <time datetime="@userSubmission.SubmittedAt.ToString("yyyy-MM-ddTHH:mm:ss")">@userSubmission.SubmittedAt</time></p>
+                        <p class="mb-2 small fw-bold">الاسم المسجل: @userSubmission.StudentName</p>
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <a href="@userSubmission.FilePath" target="_blank" rel="noopener" class="btn btn-sm btn-success">
+                                <i class="bi bi-eye ms-1" aria-hidden="true"></i> عرض الحل المرفوع منك
+                            </a>
+                        </div>
+                        @if (!string.IsNullOrEmpty(userSubmission.Grade))
+                        {
+                            <div class="d-flex align-items-center gap-3 mt-3 pt-3 border-top">
+                                <span class="sp-grade-pill sp-num" aria-label="الدرجة">@userSubmission.Grade</span>
+                                <div>
+                                    <div class="fw-bold small mb-1">الدرجة / الملاحظات</div>
+                                    <div class="sp-grade-notes">@userSubmission.Grade</div>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="small sp-muted mb-0 mt-2"><i class="bi bi-info-circle ms-1"></i> تم استلام حلك، وستظهر الدرجة هنا بعد التقييم.</p>
+                        }
+                    </div>
+                }
+                else
+                {
+                    @if (isOverdue)
+                    {
+                        <div class="alert alert-danger d-flex align-items-center gap-2 py-2 mb-0" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                            انتهى موعد تسليم هذا الواجب. تواصل مع المعلّم عند الحاجة.
+                        </div>
+                    }
+                    else
+                    {
+                        <form asp-controller="Student" asp-action="SubmitAssignment" method="post" enctype="multipart/form-data" class="vstack gap-2">
+                            <input type="hidden" name="assignmentId" value="@Model.Id" />
+                            <div>
+                                <label class="form-label small fw-bold" for="name-@li-@ai">الاسم الثلاثي</label>
+                                <input type="text" id="name-@li-@ai" name="studentName" class="form-control form-control-sm" placeholder="اكتب اسمك الثلاثي هنا..." required autocomplete="name" />
+                            </div>
+                            <div class="sp-dropzone" data-dropzone tabindex="0" role="button" aria-label="منطقة رفع ملف الحل">
+                                <span class="sp-drop-icon"><i class="bi bi-cloud-arrow-up-fill" aria-hidden="true"></i></span>
+                                <div class="fw-bold small" data-file-name>اختر ملف الحل أو اسحبه هنا (PDF / صور / مضغوط)</div>
+                                <div class="sp-file-preview mt-1"></div>
+                                <input type="file" name="submissionFile" class="visually-hidden" required aria-label="ملف الحل" />
+                            </div>
+                            <button type="submit" class="btn btn-sp-primary btn-sm w-100 py-2">
+                                <i class="bi bi-send-fill ms-1" aria-hidden="true"></i> رفع الحل
+                            </button>
+                        </form>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>

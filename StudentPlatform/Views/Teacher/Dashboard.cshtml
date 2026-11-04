@@ -1,0 +1,89 @@
+﻿@model IEnumerable<StudentPlatform.Models.Lecture>
+
+@{
+    ViewData["Title"] = "لوحة تحكم المدرس";
+    ViewData["PageTitle"] = "لوحة تحكم المدرس";
+    ViewData["PageSubtitle"] = "أنشئ المحاضرات، أضف الواجبات، وراجع حلول الطلاب.";
+    ViewData["PageIcon"] = "bi-speedometer2";
+    var totalSubs = Model.SelectMany(l => l.Assignments ?? Enumerable.Empty<StudentPlatform.Models.Assignment>()).Count();
+}
+
+<partial name="_PageHeader" />
+
+<div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-4">
+    <div class="d-flex gap-2 flex-wrap">
+        <span class="sp-badge sp-badge-sky"><i class="bi bi-collection-play-fill"></i> <span class="sp-num">@Model.Count()</span> محاضرة</span>
+        <span class="sp-badge sp-badge-gray"><i class="bi bi-journal-text"></i> <span class="sp-num">@totalSubs</span> واجب</span>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <div class="input-group sp-search">
+            <span class="input-group-text bg-transparent"><i class="bi bi-search" aria-hidden="true"></i></span>
+            <input type="search" class="form-control" placeholder="ابحث عن محاضرة..." aria-label="البحث في المحاضرات"
+                   data-table-search="#teacherCards" />
+        </div>
+        <a asp-action="CreateLecture" class="btn btn-sp-primary btn-sm px-3"><i class="bi bi-plus-circle-fill ms-1"></i> إضافة محاضرة جديدة</a>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <partial name="_EmptyState" view-data='new ViewDataDictionary(ViewData) { { "EmptyTitle", "لا توجد محاضرات بعد" }, { "EmptyMessage", "ابدأ بإضافة محاضرتك الأولى وستظهر هنا مباشرة." }, { "EmptyIcon", "bi-collection-play" } }' />
+}
+else
+{
+    <div class="row g-3" id="teacherCards">
+        @foreach (var lecture in Model)
+        {
+            <div class="col-md-6 col-xl-4">
+                <div class="sp-card hover-lift p-4 h-100 d-flex flex-column">
+                    <h2 class="h6 fw-bolder mb-1">@lecture.Title</h2>
+                    <p class="sp-muted small flex-grow-1" style="line-height:1.9;">@lecture.Description</p>
+
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        @if (!string.IsNullOrEmpty(lecture.VideoUrl))
+                        {
+                            <a href="@lecture.VideoUrl" target="_blank" rel="noopener" class="btn btn-sp-outline btn-sm" data-bs-toggle="tooltip" title="فتح فيديو المحاضرة">
+                                <i class="bi bi-play-circle-fill ms-1"></i> الفيديو
+                            </a>
+                        }
+                        @if (!string.IsNullOrEmpty(lecture.FilePath))
+                        {
+                            <a href="@lecture.FilePath" target="_blank" rel="noopener" class="btn btn-sp-outline btn-sm" data-bs-toggle="tooltip" title="تحميل الملف المرفق">
+                                <i class="bi bi-file-earmark-arrow-down ms-1"></i> الملف المرفق
+                            </a>
+                        }
+                    </div>
+
+                    @if (lecture.Assignments != null && lecture.Assignments.Any())
+                    {
+                        <div class="mb-3">
+                            <div class="small fw-bold sp-muted border-bottom sp-div pb-1 mb-2">الواجبات المضافة (@lecture.Assignments.Count):</div>
+                            <ul class="list-unstyled vstack gap-2 mb-0">
+                                @foreach (var assignment in lecture.Assignments)
+                                {
+                                    <li class="d-flex justify-content-between align-items-center gap-2 p-2 rounded" style="background:var(--sp-bg);border:1px solid var(--sp-border);">
+                                        <span class="small fw-semibold text-truncate" title="@assignment.Title">@assignment.Title</span>
+                                        <a asp-controller="Teacher" asp-action="ViewSubmissions" asp-route-assignmentId="@assignment.Id"
+                                           class="btn btn-sm btn-sp-outline flex-shrink-0" data-bs-toggle="tooltip" title="مراجعة حلول الطلاب">
+                                            <i class="bi bi-eye ms-1"></i> مراجعة الحلول
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="small sp-muted"><i class="bi bi-info-circle ms-1"></i> لا توجد واجبات مضافة بعد.</p>
+                    }
+
+                    <div class="mt-auto border-top sp-div pt-3 d-grid">
+                        <a asp-controller="Assignment" asp-action="Create" asp-route-lectureId="@lecture.Id" class="btn btn-sp-primary btn-sm">
+                            <i class="bi bi-plus-lg ms-1"></i> إضافة واجب لهذه المحاضرة
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

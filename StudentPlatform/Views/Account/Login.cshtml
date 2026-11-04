@@ -1,0 +1,44 @@
+﻿@model StudentPlatform.Models.LoginViewModel
+
+@{
+    ViewData["Title"] = "تسجيل الدخول";
+}
+
+<div class="sp-auth-wrap py-3">
+    <div class="sp-card sp-auth-card">
+        <div class="text-center mb-4">
+            <span class="sp-auth-logo mb-3"><i class="bi bi-mortarboard-fill" aria-hidden="true"></i></span>
+            <h1 class="h4 fw-bolder mb-1">مرحباً بعودتك</h1>
+            <p class="sp-muted small mb-0">سجّل الدخول لمتابعة محاضراتك وواجباتك</p>
+        </div>
+        <form asp-action="Login" method="post" novalidate>
+            <div asp-validation-summary="All" class="text-danger mb-3 small"></div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Email" class="form-control" placeholder="name@example.com" autocomplete="email" />
+                <label asp-for="Email"></label>
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Password" class="form-control" placeholder="كلمة المرور" autocomplete="current-password" />
+                <label asp-for="Password"></label>
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3 form-check">
+                <input asp-for="RememberMe" class="form-check-input" />
+                <label asp-for="RememberMe" class="form-check-label"></label>
+            </div>
+
+            <button type="submit" class="btn btn-sp-primary w-100 py-2"><i class="bi bi-box-arrow-in-left ms-1"></i> دخول</button>
+            <p class="text-center small sp-muted mt-3 mb-0">ليس لديك حساب؟ <a asp-action="Register" class="fw-bold text-decoration-none">إنشاء حساب طالب</a></p>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

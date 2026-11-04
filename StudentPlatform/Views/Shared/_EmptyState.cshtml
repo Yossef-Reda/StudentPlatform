@@ -1,0 +1,11 @@
+@* Empty state. ViewData: EmptyTitle, EmptyMessage, EmptyIcon (bi-*) *@
+@{
+    var title = ViewData["EmptyTitle"]?.ToString() ?? "لا توجد عناصر بعد";
+    var msg = ViewData["EmptyMessage"]?.ToString() ?? "ستظهر العناصر هنا عند إضافتها.";
+    var icon = ViewData["EmptyIcon"]?.ToString() ?? "bi-inbox";
+}
+<div class="sp-empty" role="status">
+    <span class="sp-empty-icon" aria-hidden="true"><i class="bi @icon"></i></span>
+    <h3 class="h5 fw-bold mb-1">@title</h3>
+    <p class="sp-muted mb-0">@msg</p>
+</div>

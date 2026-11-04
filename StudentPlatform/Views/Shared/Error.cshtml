@@ -1,0 +1,18 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "حدث خطأ";
+}
+<div class="sp-auth-wrap text-center py-4">
+    <div class="sp-card sp-auth-card">
+        <span class="sp-stat-icon is-red mx-auto mb-3" style="width:64px;height:64px;font-size:1.8rem;"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i></span>
+        <h1 class="h4 fw-bolder mb-1">عذراً، حدث خطأ غير متوقع</h1>
+        <p class="sp-muted mb-3">تعذّر إتمام طلبك. حاول تحديث الصفحة أو العودة للرئيسية.</p>
+        @if (Model.ShowRequestId)
+        {
+            <p class="small sp-muted">معرّف الطلب: <code class="sp-num">@Model.RequestId</code></p>
+        }
+        <div class="d-flex gap-2 justify-content-center mt-3">
+            <a class="btn btn-sp-primary px-4" asp-controller="Home" asp-action="Index"><i class="bi bi-house-door ms-1"></i> العودة للرئيسية</a>
+        </div>
+    </div>
+</div>
